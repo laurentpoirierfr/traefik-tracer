@@ -1,0 +1,2 @@
+# .dockerignore file exludes files from the image:
+.git

@@ -1,0 +1,39 @@
+# docker-compose.yaml for Traefik Proxy local plugin development
+version: "3.3" 
+
+services:
+
+  traefik:
+    build:
+      context: .
+      args:
+        PLUGIN_MODULE: ${PLUGIN_MODULE}
+    container_name: "traefik"
+    command:
+      # - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # - "--entrypoints.web.address=:80"
+      # - "--tracing.serviceName=traefik"
+      # - "--tracing.zipkin=true"
+      # - "--tracing.zipkin.httpEndpoint=http://zipkin:9411/api/v2/spans"
+      # - "--tracing.zipkin.sameSpan=true"
+      ## Enable local plugins:
+      - "--experimental.localPlugins.${PLUGIN_NAME}.moduleName=${PLUGIN_MODULE}"
+
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  whoami:
+    image: "traefik/whoami"
+    container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`${WHOAMI_TRAEFIK_HOST}`)"
+      - "traefik.http.routers.whoami.entrypoints=web"      
+      - "traefik.http.middlewares.whoami-demo.plugin.${PLUGIN_NAME}.headers.DoesPluginWork=YES"      
